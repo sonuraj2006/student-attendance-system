@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Directory - CampusPulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="navPlaceholder"></div>
+
+  <main class="container-fluid px-md-4 py-4" style="max-width: 1400px;">
+    <!-- Page Header & Action Bar -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <h2 class="fw-bold mb-1" style="letter-spacing: -0.02em;">Student Roster & Parent Directory</h2>
+        <p class="text-muted mb-0">Maintain student records, assigned roll numbers, and primary parent emergency contacts.</p>
+      </div>
+
+      <div id="adminActionsContainer">
+        <!-- Rendered if admin -->
+      </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="app-card mb-4">
+      <div class="row g-3">
+        <div class="col-12 col-md-4">
+          <label for="filterClass" class="form-label small fw-semibold text-muted text-uppercase">Filter By Class</label>
+          <select id="filterClass" class="form-select">
+            <option value="">All Classes</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label for="searchQuery" class="form-label small fw-semibold text-muted text-uppercase">Search Student</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="searchQuery" class="form-control" placeholder="Search by name, roll number, or student ID...">
+          </div>
+        </div>
+
+        <div class="col-12 col-md-2 d-flex align-items-end">
+          <button id="resetFilterBtn" class="btn btn-secondary-custom w-100">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Records Table -->
+    <div class="app-card p-0 overflow-hidden">
+      <div class="table-responsive">
+        <table class="custom-table mb-0">
+          <thead>
+            <tr>
+              <th style="width: 130px;">Student ID</th>
+              <th>Student Name</th>
+              <th>Roll Number</th>
+              <th>Class Section</th>
+              <th>Parent Name</th>
+              <th>Parent Email & Phone</th>
+              <th class="text-end admin-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody">
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading student directory...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add / Edit Student Modal -->
+  <div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold" id="studentModalLabel">Add New Student</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="studentForm">
+          <div class="modal-body py-3">
+            <input type="hidden" id="studentMongoId">
+
+            <div class="row g-3">
+              <div class="col-6">
+                <label for="modalStudentId" class="form-label small fw-semibold text-muted text-uppercase">Student ID *</label>
+                <input type="text" class="form-control" id="modalStudentId" placeholder="e.g. SKL/2026/0182" required>
+              </div>
+
+              <div class="col-6">
+                <label for="modalRollNumber" class="form-label small fw-semibold text-muted text-uppercase">Roll Number *</label>
+                <input type="text" class="form-control" id="modalRollNumber" placeholder="e.g. 24R21A6601" required>
+              </div>
+
+              <div class="col-6">
+                <label for="modalName" class="form-label small fw-semibold text-muted text-uppercase">Full Name *</label>
+                <input type="text" class="form-control" id="modalName" placeholder="e.g. Aarav Sharma" required>
+              </div>
+
+              <div class="col-6">
+                <label for="modalClassId" class="form-label small fw-semibold text-muted text-uppercase">Class Section *</label>
+                <input type="text" class="form-control" id="modalClassId" placeholder="e.g. CSE-A" required>
+              </div>
+
+              <div class="col-12">
+                <hr class="my-2">
+                <h6 class="fw-bold mb-2 small text-primary"><i class="bi bi-person-heart"></i> Parent / Guardian Contact Details</h6>
+              </div>
+
+              <div class="col-12">
+                <label for="modalParentName" class="form-label small fw-semibold text-muted text-uppercase">Parent Name *</label>
+                <input type="text" class="form-control" id="modalParentName" placeholder="e.g. Sanjay Sharma" required>
+              </div>
+
+              <div class="col-6">
+                <label for="modalParentEmail" class="form-label small fw-semibold text-muted text-uppercase">Parent Email (For Absence Alerts) *</label>
+                <input type="email" class="form-control" id="modalParentEmail" placeholder="parent@example.com" required>
+              </div>
+
+              <div class="col-6">
+                <label for="modalParentPhone" class="form-label small fw-semibold text-muted text-uppercase">Parent Phone</label>
+                <input type="text" class="form-control" id="modalParentPhone" placeholder="+91 98765 43210">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" id="modalSaveBtn" class="btn btn-primary-custom">Save Student Record</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="app.js"></script>
+  <script>
+    let studentModalInstance = null;
+    let currentUser = null;
+    let studentsCache = [];
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      currentUser = App.requireAuth();
+      if (!currentUser) return;
+
+      App.renderNavbar("students");
+      studentModalInstance = new bootstrap.Modal(document.getElementById("studentModal"));
+
+      const isAdmin = currentUser.role === "admin";
+      if (isAdmin) {
+        document.getElementById("adminActionsContainer").innerHTML = `
+          <button id="addStudentBtn" class="btn btn-primary-custom">
+            <i class="bi bi-person-plus-fill"></i> Add New Student
+          </button>
+        `;
+        document.getElementById("addStudentBtn").addEventListener("click", openAddModal);
+      } else {
+        // Hide admin-only column if faculty
+        document.querySelectorAll(".admin-col").forEach((el) => el.style.display = "none");
+      }
+
+      await loadClassesDropdown();
+      await fetchStudents();
+
+      document.getElementById("filterClass").addEventListener("change", fetchStudents);
+      
+      let searchTimeout = null;
+      document.getElementById("searchQuery").addEventListener("input", () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(fetchStudents, 300);
+      });
+
+      document.getElementById("resetFilterBtn").addEventListener("click", () => {
+        document.getElementById("filterClass").value = "";
+        document.getElementById("searchQuery").value = "";
+        fetchStudents();
+      });
+
+      document.getElementById("studentForm").addEventListener("submit", handleSaveStudent);
+    });
+
+    async function loadClassesDropdown() {
+      const select = document.getElementById("filterClass");
+      try {
+        const data = await App.apiFetch("/api/students/classes");
+        const classes = data.classes || [];
+        select.innerHTML = '<option value="">All Classes</option>';
+        classes.forEach((cls) => {
+          const opt = document.createElement("option");
+          opt.value = cls;
+          opt.textContent = cls;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Classes load error:", err);
+      }
+    }
+
+    async function fetchStudents() {
+      const classId = document.getElementById("filterClass").value;
+      const search = document.getElementById("searchQuery").value.trim();
+      const tbody = document.getElementById("studentTableBody");
+
+      let query = "";
+      const params = new URLSearchParams();
+      if (classId) params.append("classId", classId);
+      if (search) params.append("search", search);
+      if (params.toString()) query = "?" + params.toString();
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-5 text-muted">
+            <div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading...
+          </td>
+        </tr>
+      `;
+
+      try {
+        const data = await App.apiFetch("/api/students" + query);
+        studentsCache = data.students || [];
+        renderTable();
+      } catch (err) {
+        console.error("Fetch students error:", err);
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger">${App.escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById("studentTableBody");
+      const isAdmin = currentUser && currentUser.role === "admin";
+
+      if (studentsCache.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No students matching the criteria.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = studentsCache.map((s) => {
+        const actionsHtml = isAdmin ? `
+          <td class="text-end admin-col">
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal('${s._id}')" title="Edit">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent('${s._id}', '${App.escapeHtml(s.name)}')" title="Delete">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        ` : '';
+
+        return `
+          <tr>
+            <td><code class="fw-bold text-dark">${App.escapeHtml(s.studentId)}</code></td>
+            <td class="fw-bold">${App.escapeHtml(s.name)}</td>
+            <td><span class="badge bg-light text-dark border">${App.escapeHtml(s.rollNumber)}</span></td>
+            <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">${App.escapeHtml(s.classId)}</span></td>
+            <td class="fw-semibold">${App.escapeHtml(s.parentName)}</td>
+            <td>
+              <div class="small"><i class="bi bi-envelope text-muted"></i> ${App.escapeHtml(s.parentEmail)}</div>
+              ${s.parentPhone ? `<div class="small text-muted"><i class="bi bi-telephone"></i> ${App.escapeHtml(s.parentPhone)}</div>` : ''}
+            </td>
+            ${actionsHtml}
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function openAddModal() {
+      document.getElementById("studentModalLabel").textContent = "Add New Student";
+      document.getElementById("studentForm").reset();
+      document.getElementById("studentMongoId").value = "";
+      studentModalInstance.show();
+    }
+
+    function openEditModal(mongoId) {
+      const student = studentsCache.find((s) => s._id === mongoId);
+      if (!student) return;
+
+      document.getElementById("studentModalLabel").textContent = "Edit Student Record";
+      document.getElementById("studentMongoId").value = student._id;
+      document.getElementById("modalStudentId").value = student.studentId;
+      document.getElementById("modalRollNumber").value = student.rollNumber;
+      document.getElementById("modalName").value = student.name;
+      document.getElementById("modalClassId").value = student.classId;
+      document.getElementById("modalParentName").value = student.parentName;
+      document.getElementById("modalParentEmail").value = student.parentEmail;
+      document.getElementById("modalParentPhone").value = student.parentPhone || "";
+
+      studentModalInstance.show();
+    }
+
+    async function handleSaveStudent(e) {
+      e.preventDefault();
+      const mongoId = document.getElementById("studentMongoId").value;
+      const saveBtn = document.getElementById("modalSaveBtn");
+
+      const payload = {
+        studentId: document.getElementById("modalStudentId").value.trim(),
+        rollNumber: document.getElementById("modalRollNumber").value.trim(),
+        name: document.getElementById("modalName").value.trim(),
+        classId: document.getElementById("modalClassId").value.trim(),
+        parentName: document.getElementById("modalParentName").value.trim(),
+        parentEmail: document.getElementById("modalParentEmail").value.trim(),
+        parentPhone: document.getElementById("modalParentPhone").value.trim()
+      };
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+
+      try {
+        if (mongoId) {
+          // Update
+          await App.apiFetch(`/api/students/${mongoId}`, {
+            method: "PUT",
+            body: JSON.stringify(payload)
+          });
+          App.showToast("Student updated successfully!", "success");
+        } else {
+          // Create
+          await App.apiFetch("/api/students", {
+            method: "POST",
+            body: JSON.stringify(payload)
+          });
+          App.showToast("Student added successfully!", "success");
+        }
+
+        studentModalInstance.hide();
+        await loadClassesDropdown();
+        await fetchStudents();
+      } catch (err) {
+        console.error("Save student error:", err);
+        App.showToast("Failed to save: " + err.message, "danger");
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Student Record";
+      }
+    }
+
+    async function deleteStudent(mongoId, name) {
+      if (!confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        await App.apiFetch(`/api/students/${mongoId}`, {
+          method: "DELETE"
+        });
+        App.showToast("Student deleted successfully.", "success");
+        await fetchStudents();
+      } catch (err) {
+        console.error("Delete student error:", err);
+        App.showToast(err.message, "danger");
+      }
+    }
+  </script>
+</body>
+</html>

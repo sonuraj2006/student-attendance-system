@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - CampusPulse Attendance System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="navPlaceholder"></div>
+
+  <main class="container-fluid px-md-4 py-4" style="max-width: 1400px;">
+    <!-- Welcome Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <h2 class="fw-bold mb-1" style="letter-spacing: -0.02em;">Dashboard Overview</h2>
+        <p class="text-muted mb-0" id="welcomeSubtitle">Welcome to the College Attendance & Parent Notification System</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="attendance.html" class="btn btn-primary-custom">
+          <i class="bi bi-calendar-check-fill"></i> Mark Attendance
+        </a>
+        <a href="reports.html" class="btn btn-secondary-custom">
+          <i class="bi bi-bar-chart-fill"></i> View Reports
+        </a>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="app-card kpi-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="kpi-label">Total Students</p>
+              <h3 class="kpi-value" id="totalStudentsCount">--</h3>
+              <span class="small text-muted"><i class="bi bi-person-lines-fill"></i> Registered across classes</span>
+            </div>
+            <div class="kpi-icon bg-primary text-white">
+              <i class="bi bi-people"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="app-card kpi-card warning">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="kpi-label">Active Classes</p>
+              <h3 class="kpi-value" id="activeClassesCount">--</h3>
+              <span class="small text-muted"><i class="bi bi-book"></i> Active batch sections</span>
+            </div>
+            <div class="kpi-icon bg-warning text-white">
+              <i class="bi bi-mortarboard"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="app-card kpi-card success">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="kpi-label">Attendance Rate</p>
+              <h3 class="kpi-value" id="todayRate">--%</h3>
+              <span class="small text-success fw-semibold"><i class="bi bi-check2-circle"></i> Cumulative presence</span>
+            </div>
+            <div class="kpi-icon bg-success text-white">
+              <i class="bi bi-pie-chart"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="app-card kpi-card danger">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="kpi-label">Parent Alerts Triggered</p>
+              <h3 class="kpi-value" id="notificationsCount">--</h3>
+              <span class="small text-danger fw-semibold"><i class="bi bi-envelope-exclamation"></i> Absence notifications</span>
+            </div>
+            <div class="kpi-icon bg-danger text-white">
+              <i class="bi bi-bell"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Sections & Recent Notifications -->
+    <div class="row g-4">
+      <!-- Quick Class Attendance Launcher -->
+      <div class="col-12 col-lg-5">
+        <div class="app-card h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Quick Attendance Action</h5>
+            <span class="badge bg-light text-dark border" id="todayDateBadge"></span>
+          </div>
+          <p class="text-muted small">Select a class section below to begin or update attendance for today:</p>
+          
+          <div class="mb-3">
+            <label for="quickClassSelect" class="form-label small fw-semibold text-muted text-uppercase">Class Section</label>
+            <select class="form-select" id="quickClassSelect"></select>
+          </div>
+
+          <div class="p-3 rounded bg-light border mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small fw-bold text-dark">Parent Auto-Notification</span>
+              <span class="badge bg-success">Active (Nodemailer)</span>
+            </div>
+            <p class="small text-muted mb-0">Whenever a student is marked Absent, an automatic email notification is dispatched to their parent.</p>
+          </div>
+
+          <button id="openAttendanceBtn" class="btn btn-primary-custom w-100 justify-content-center py-2">
+            <i class="bi bi-clipboard2-check-fill"></i> Open Class Attendance Sheet
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent Parent Notifications Log -->
+      <div class="col-12 col-lg-7">
+        <div class="app-card h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-broadcast text-primary me-2"></i>Recent Parent Absence Notifications</h5>
+            <a href="reports.html" class="small fw-bold text-primary text-decoration-none">View All &rarr;</a>
+          </div>
+
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Class</th>
+                  <th>Parent Contact</th>
+                  <th>Status</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="recentNotificationsBody">
+                <tr>
+                  <td colspan="5" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2"></div> Loading alerts...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const user = App.requireAuth();
+      if (!user) return;
+
+      App.renderNavbar("dashboard");
+
+      document.getElementById("welcomeSubtitle").textContent = 
+        `Logged in as ${user.name} (${user.role.toUpperCase()}) • College Attendance Management`;
+      
+      const todayStr = App.getTodayString();
+      document.getElementById("todayDateBadge").textContent = `Today: ${todayStr}`;
+
+      await App.loadClassOptions("quickClassSelect");
+
+      document.getElementById("openAttendanceBtn").addEventListener("click", () => {
+        const cls = document.getElementById("quickClassSelect").value;
+        if (cls) {
+          window.location.href = `attendance.html?classId=${encodeURIComponent(cls)}&date=${todayStr}`;
+        } else {
+          window.location.href = "attendance.html";
+        }
+      });
+
+      // Load KPI Metrics
+      try {
+        const [studentsData, classesData, reportsData, notifsData] = await Promise.all([
+          App.apiFetch("/api/students"),
+          App.apiFetch("/api/students/classes"),
+          App.apiFetch("/api/reports"),
+          App.apiFetch("/api/notifications")
+        ]);
+
+        document.getElementById("totalStudentsCount").textContent = studentsData.count || 0;
+        document.getElementById("activeClassesCount").textContent = (classesData.classes || []).length;
+        
+        const summary = reportsData.summary || {};
+        document.getElementById("todayRate").textContent = `${summary.attendancePercentage || 0}%`;
+        document.getElementById("notificationsCount").textContent = notifsData.count || 0;
+
+        // Render recent notifications
+        const tbody = document.getElementById("recentNotificationsBody");
+        const notifs = notifsData.notifications || [];
+        if (notifs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No parent notifications recorded yet.</td></tr>';
+        } else {
+          tbody.innerHTML = notifs.slice(0, 5).map((n) => {
+            const student = n.studentId || {};
+            const statusClass = n.deliveryStatus === "Sent" ? "sent" : (n.deliveryStatus === "Failed" ? "failed" : "pending");
+            const timeStr = n.sentAt ? new Date(n.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Pending";
+
+            return `
+              <tr>
+                <td>
+                  <span class="fw-bold">${App.escapeHtml(student.name || "Student")}</span>
+                  <div class="small text-muted">${App.escapeHtml(student.rollNumber || "")}</div>
+                </td>
+                <td><span class="badge bg-light text-dark border">${App.escapeHtml(student.classId || "N/A")}</span></td>
+                <td><span class="small">${App.escapeHtml(n.parentContact || "")}</span></td>
+                <td><span class="status-pill ${statusClass}"><i class="bi bi-circle-fill" style="font-size: 0.45rem;"></i> ${n.deliveryStatus}</span></td>
+                <td class="small text-muted">${timeStr}</td>
+              </tr>
+            `;
+          }).join("");
+        }
+      } catch (err) {
+        console.error("Dashboard data load error:", err);
+        App.showToast("Failed to load dashboard metrics: " + err.message, "danger");
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mark Attendance - CampusPulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="navPlaceholder"></div>
+
+  <main class="container-fluid px-md-4 py-4" style="max-width: 1400px;">
+    <!-- Page Header & Action Bar -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <h2 class="fw-bold mb-1" style="letter-spacing: -0.02em;">Class Attendance Register</h2>
+        <p class="text-muted mb-0">Record daily student attendance and automatically dispatch parent absence notifications.</p>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <button id="saveAttendanceBtn" class="btn btn-primary-custom" disabled>
+          <i class="bi bi-cloud-arrow-up-fill"></i> Save Attendance & Dispatch Alerts
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Control Card -->
+    <div class="app-card mb-4">
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-4 col-lg-3">
+          <label for="classSelect" class="form-label small fw-semibold text-muted text-uppercase">Select Class Section</label>
+          <select id="classSelect" class="form-select">
+            <option value="">Loading classes...</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-4 col-lg-3">
+          <label for="datePicker" class="form-label small fw-semibold text-muted text-uppercase">Attendance Date</label>
+          <input type="date" id="datePicker" class="form-control">
+        </div>
+
+        <div class="col-12 col-md-4 col-lg-3">
+          <button id="loadSheetBtn" class="btn btn-secondary-custom w-100">
+            <i class="bi bi-arrow-repeat"></i> Reload Sheet
+          </button>
+        </div>
+
+        <div class="col-12 col-lg-3 ms-auto text-lg-end">
+          <span class="small fw-semibold text-muted d-block mb-1">Batch Quick Mark:</span>
+          <div class="btn-group btn-group-sm" role="group">
+            <button id="allPresentBtn" type="button" class="btn btn-outline-success">
+              <i class="bi bi-check-all"></i> All Present
+            </button>
+            <button id="allAbsentBtn" type="button" class="btn btn-outline-danger">
+              <i class="bi bi-x-octagon"></i> All Absent
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-time Attendance Summary Strip -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 p-3 bg-white border rounded-3 mb-3 shadow-sm">
+      <div class="d-flex align-items-center gap-3">
+        <span class="fw-bold text-dark"><i class="bi bi-people-fill text-primary me-1"></i> Class Roster:</span>
+        <span class="badge bg-secondary">Total: <strong id="summaryTotal">0</strong></span>
+        <span class="badge bg-success">Present: <strong id="summaryPresent">0</strong></span>
+        <span class="badge bg-danger">Absent: <strong id="summaryAbsent">0</strong></span>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <span class="small text-muted"><i class="bi bi-bell-fill text-warning"></i> Auto-Email for Absentees:</span>
+        <span class="badge bg-primary">Enabled</span>
+      </div>
+    </div>
+
+    <!-- Attendance Sheet Table -->
+    <div class="app-card p-0 overflow-hidden">
+      <div class="table-responsive">
+        <table class="custom-table mb-0">
+          <thead>
+            <tr>
+              <th style="width: 120px;">Student ID</th>
+              <th>Student Name & Roll</th>
+              <th>Class Section</th>
+              <th>Parent Details</th>
+              <th class="text-center" style="width: 220px;">Attendance Status</th>
+              <th class="text-center" style="width: 140px;">Parent Alert</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceTableBody">
+            <tr>
+              <td colspan="6" class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-event fs-1 d-block mb-2 text-primary opacity-50"></i>
+                Select a class section and date to load the attendance register.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Submission Results Modal -->
+  <div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold" id="resultModalLabel">Attendance Saved Successfully</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-4">
+          <div class="text-center mb-4">
+            <div class="rounded-circle bg-success-subtle text-success d-inline-flex p-3 mb-3">
+              <i class="bi bi-check2-circle fs-1"></i>
+            </div>
+            <h6 class="fw-bold" id="modalSummaryTitle">Attendance for 0 Students Recorded</h6>
+            <p class="text-muted small mb-0" id="modalSummarySubtitle"></p>
+          </div>
+
+          <div class="p-3 bg-light rounded-3 mb-3">
+            <div class="d-flex justify-content-between mb-2 small">
+              <span class="text-muted">Present Students:</span>
+              <strong class="text-success" id="modalPresentCount">0</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2 small">
+              <span class="text-muted">Absent Students:</span>
+              <strong class="text-danger" id="modalAbsentCount">0</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2 small">
+              <span class="text-muted">Parent Emails Dispatched:</span>
+              <strong class="text-primary" id="modalEmailSentCount">0</strong>
+            </div>
+            <div class="d-flex justify-content-between small">
+              <span class="text-muted">Parent Emails Failed / Pending:</span>
+              <strong class="text-warning" id="modalEmailFailedCount">0</strong>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <a href="reports.html" class="btn btn-secondary-custom">View Detailed Report</a>
+          <button type="button" class="btn btn-primary-custom" data-bs-dismiss="modal">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="app.js"></script>
+  <script>
+    let currentSheetData = [];
+    let resultModalInstance = null;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const user = App.requireAuth();
+      if (!user) return;
+
+      App.renderNavbar("attendance");
+      resultModalInstance = new bootstrap.Modal(document.getElementById("resultModal"));
+
+      const datePicker = document.getElementById("datePicker");
+      const classSelect = document.getElementById("classSelect");
+
+      // Check query params
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryClass = urlParams.get("classId");
+      const queryDate = urlParams.get("date") || App.getTodayString();
+
+      datePicker.value = queryDate;
+
+      await App.loadClassOptions("classSelect", queryClass);
+
+      if (classSelect.value) {
+        await loadAttendanceSheet();
+      }
+
+      classSelect.addEventListener("change", loadAttendanceSheet);
+      datePicker.addEventListener("change", loadAttendanceSheet);
+      document.getElementById("loadSheetBtn").addEventListener("click", loadAttendanceSheet);
+
+      document.getElementById("allPresentBtn").addEventListener("click", () => setAllStatus("Present"));
+      document.getElementById("allAbsentBtn").addEventListener("click", () => setAllStatus("Absent"));
+
+      document.getElementById("saveAttendanceBtn").addEventListener("click", saveAttendance);
+    });
+
+    async function loadAttendanceSheet() {
+      const classId = document.getElementById("classSelect").value;
+      const date = document.getElementById("datePicker").value;
+      const tbody = document.getElementById("attendanceTableBody");
+      const saveBtn = document.getElementById("saveAttendanceBtn");
+
+      if (!classId || !date) return;
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-5 text-muted">
+            <div class="spinner-border text-primary me-2"></div> Loading class roster...
+          </td>
+        </tr>
+      `;
+      saveBtn.disabled = true;
+
+      try {
+        const data = await App.apiFetch(`/api/attendance/sheet?classId=${encodeURIComponent(classId)}&date=${encodeURIComponent(date)}`);
+        currentSheetData = (data.students || []).map((s) => ({
+          ...s,
+          // Default to existing status or default to "Present"
+          status: s.status || "Present"
+        }));
+
+        renderAttendanceTable();
+        updateSummaryCounts();
+        saveBtn.disabled = currentSheetData.length === 0;
+      } catch (err) {
+        console.error("Load sheet error:", err);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-5 text-danger">
+              <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
+              Failed to load attendance sheet: ${App.escapeHtml(err.message)}
+            </td>
+          </tr>
+        `;
+        App.showToast("Error loading sheet: " + err.message, "danger");
+      }
+    }
+
+    function renderAttendanceTable() {
+      const tbody = document.getElementById("attendanceTableBody");
+
+      if (currentSheetData.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-5 text-muted">
+              No students found registered under this class. Add students from the Admin module.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = currentSheetData.map((s, idx) => {
+        const isPresent = s.status === "Present";
+        const notifBadge = s.status === "Absent" 
+          ? `<span class="badge ${s.notificationStatus === 'Sent' ? 'bg-success' : 'bg-warning text-dark'}"><i class="bi bi-envelope"></i> ${s.notificationStatus || 'Will Dispatch'}</span>`
+          : '<span class="text-muted small">&mdash;</span>';
+
+        return `
+          <tr>
+            <td><code class="fw-bold text-dark">${App.escapeHtml(s.studentId)}</code></td>
+            <td>
+              <div class="fw-bold">${App.escapeHtml(s.name)}</div>
+              <div class="small text-muted">Roll: ${App.escapeHtml(s.rollNumber)}</div>
+            </td>
+            <td><span class="badge bg-light text-dark border">${App.escapeHtml(s.classId)}</span></td>
+            <td>
+              <div class="small fw-semibold">${App.escapeHtml(s.parentName)}</div>
+              <div class="small text-muted"><i class="bi bi-envelope-at"></i> ${App.escapeHtml(s.parentEmail)}</div>
+            </td>
+            <td class="text-center">
+              <div class="att-toggle-group">
+                <button type="button" class="att-btn btn-p ${isPresent ? 'active' : ''}" onclick="toggleStatus(${idx}, 'Present')">
+                  <i class="bi bi-check-lg"></i> Present
+                </button>
+                <button type="button" class="att-btn btn-a ${!isPresent ? 'active' : ''}" onclick="toggleStatus(${idx}, 'Absent')">
+                  <i class="bi bi-x-lg"></i> Absent
+                </button>
+              </div>
+            </td>
+            <td class="text-center">
+              ${notifBadge}
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function toggleStatus(index, newStatus) {
+      if (!currentSheetData[index]) return;
+      currentSheetData[index].status = newStatus;
+      renderAttendanceTable();
+      updateSummaryCounts();
+    }
+
+    function setAllStatus(newStatus) {
+      currentSheetData.forEach((s) => s.status = newStatus);
+      renderAttendanceTable();
+      updateSummaryCounts();
+      App.showToast(`Marked all students as ${newStatus}`, "info");
+    }
+
+    function updateSummaryCounts() {
+      const total = currentSheetData.length;
+      const present = currentSheetData.filter((s) => s.status === "Present").length;
+      const absent = total - present;
+
+      document.getElementById("summaryTotal").textContent = total;
+      document.getElementById("summaryPresent").textContent = present;
+      document.getElementById("summaryAbsent").textContent = absent;
+    }
+
+    async function saveAttendance() {
+      const classId = document.getElementById("classSelect").value;
+      const date = document.getElementById("datePicker").value;
+      const saveBtn = document.getElementById("saveAttendanceBtn");
+
+      if (currentSheetData.length === 0) return;
+
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving & Notifying Parents...';
+
+      const payload = {
+        date,
+        classId,
+        records: currentSheetData.map((s) => ({
+          studentId: s._id,
+          status: s.status
+        }))
+      };
+
+      try {
+        const response = await App.apiFetch("/api/attendance/batch", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        // Populate Result Modal
+        document.getElementById("modalSummaryTitle").textContent = 
+          `Attendance for ${response.total} Students Recorded`;
+        document.getElementById("modalSummarySubtitle").textContent = 
+          `Class ${classId} • Date: ${date}`;
+        document.getElementById("modalPresentCount").textContent = response.presentCount;
+        document.getElementById("modalAbsentCount").textContent = response.absentCount;
+        document.getElementById("modalEmailSentCount").textContent = response.emailsSent;
+        document.getElementById("modalEmailFailedCount").textContent = response.emailsFailed;
+
+        resultModalInstance.show();
+        App.showToast("Attendance saved successfully!", "success");
+
+        // Reload sheet to refresh notification statuses
+        await loadAttendanceSheet();
+      } catch (err) {
+        console.error("Save attendance error:", err);
+        App.showToast("Failed to save attendance: " + err.message, "danger");
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Save Attendance & Dispatch Alerts';
+      }
+    }
+  </script>
+</body>
+</html>
